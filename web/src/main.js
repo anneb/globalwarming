@@ -142,7 +142,8 @@ const ui = {
   barNat: $('barNat'), barHum: $('barHum'), caption: $('caption'),
   btnNat: $('btnNat'), btnHuman: $('btnHuman'), btnFilm: $('btnFilm'), btnReset: $('btnReset'),
   speed: $('speed'), speedVal: $('speedVal'), chkLabels: $('chkLabels'), chkFossil: $('chkFossil'),
-  scenario: $('scenario'),
+  scenario: $('scenario'), scenarioM: $('scenarioM'),
+  btnFilmM: $('btnFilmM'), btnMore: $('btnMore'),
 };
 const fmt = (v, d = 2) => v.toLocaleString('nl-NL', { minimumFractionDigits: d, maximumFractionDigits: d });
 
@@ -225,7 +226,7 @@ function stopFilm() {
 function updateFilm(dt) {
   film.t += dt;
   cameraAt(film.t, camPos, camTgt);
-  camera.position.copy(camPos);
+  camera.position.copy(camPos.sub(camTgt).multiplyScalar(portraitK).add(camTgt));
   camera.lookAt(camTgt);
   const hl = film.t > 18 && film.t < 25 ? 1 : 0;
   uniforms.uHighlight.value += (hl - uniforms.uHighlight.value) * Math.min(1, dt * 2);
@@ -277,6 +278,7 @@ function render() {
   labelRenderer.render(scene, camera);
 }
 
+let portraitK = 1;
 function resize() {
   const w = RECORD ? Number(params.get('w')) || 1920 : innerWidth;
   const h = RECORD ? Number(params.get('h')) || 1080 : innerHeight;
@@ -284,6 +286,8 @@ function resize() {
   labelRenderer.setSize(w, h);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
+  // narrow (portrait) screens: pull the film camera back so the block fits
+  portraitK = camera.aspect < 1.2 ? Math.pow(1.2 / camera.aspect, 1.0) : 1;
   particles.setViewport(h * renderer.getPixelRatio(), camera.fov);
 }
 addEventListener('resize', resize);
@@ -307,8 +311,19 @@ ui.chkLabels.onchange = () => {
   natLabels.visible = ui.chkLabels.checked;
   humanLabels.visible = ui.chkLabels.checked && sim.mode === 'mens';
 };
-for (const [k, v] of Object.entries(SCENARIOS)) ui.scenario.add(new Option(v, k));
-ui.scenario.onchange = () => { sim.scenario = ui.scenario.value; };
+for (const [k, v] of Object.entries(SCENARIOS)) {
+  ui.scenario.add(new Option(v, k));
+  ui.scenarioM.add(new Option(v, k));
+}
+function setScenario(k) {
+  sim.scenario = k;
+  ui.scenario.value = k;
+  ui.scenarioM.value = k;
+}
+ui.scenario.onchange = () => setScenario(ui.scenario.value);
+ui.scenarioM.onchange = () => setScenario(ui.scenarioM.value);
+ui.btnFilmM.onclick = () => { document.body.classList.remove('show-panel'); startFilm(); };
+ui.btnMore.onclick = () => document.body.classList.toggle('show-panel');
 ui.chkFossil.onchange = () => { uniforms.uHighlight.value = ui.chkFossil.checked ? 1 : 0; };
 renderer.domElement.addEventListener('pointerdown', () => { if (film.active) stopFilm(); });
 
@@ -322,6 +337,12 @@ if (RECORD) {
   render();
   window.__ready = true;
 } else {
+  // phones: tell the story straight away, without label clutter
+  if (matchMedia('(max-width: 700px), (max-height: 500px)').matches) {
+    ui.chkLabels.checked = false;
+    ui.chkLabels.onchange();
+    startFilm();
+  }
   const clock = new THREE.Clock();
   renderer.setAnimationLoop(() => {
     step(Math.min(clock.getDelta(), 1 / 20));

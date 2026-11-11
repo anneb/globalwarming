@@ -70,12 +70,38 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #9fbfd9; col
 .info summary { cursor: pointer; color: var(--text); }
 .info p { color: var(--muted); margin: 6px 0; }
 
-body.record #panel { display: none; }
+body.record #panel, body.record #mobilebar { display: none !important; }
 
-@media (max-width: 700px) {
-  #hud { width: auto; right: 16px; padding: 8px 10px; }
-  #panel { top: auto; bottom: 16px; left: 16px; right: 16px; width: auto; max-height: 45vh; }
-  #panel:not([open]) { max-height: none; }
-  #caption { bottom: auto; top: 150px; font-size: 15px; }
+#mobilebar { display: none; }
+
+/* Phones: no dashboards, only year/ppm pill, captions and scenario menu */
+@media (max-width: 700px), (max-height: 500px) {
+  #hud {
+    top: 12px; left: 12px; width: auto; padding: 6px 12px; border-radius: 20px;
+    display: flex; gap: 10px; align-items: baseline;
+  }
+  #hud .bar, #hud .lbl { display: none; }
+  #hud .row { margin: 0; }
+  #hud .big { font-size: 17px; }
+  #panel { display: none; }
+  body.show-panel #panel {
+    display: block; top: auto; bottom: 68px; left: 12px; right: 12px; width: auto; max-height: 60vh;
+  }
+  #caption { bottom: 68px; font-size: 15px; padding: 8px 12px; }
+  body.show-panel #caption { display: none; }
+  #mobilebar {
+    display: flex; gap: 8px; position: fixed; left: 12px; right: 12px; bottom: 12px;
+    padding: 6px; background: var(--panel-bg); border-radius: 12px; backdrop-filter: blur(4px);
+  }
+  #mobilebar select {
+    flex: 1; min-width: 0; padding: 8px; font: inherit; font-size: 15px; color: var(--text);
+    background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 8px;
+  }
+  #mobilebar select option { color: #111; }
+  #mobilebar button {
+    width: 44px; font-size: 18px; color: var(--text); background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 8px; cursor: pointer;
+  }
   .tag { font-size: 10px; }
+}
 }
