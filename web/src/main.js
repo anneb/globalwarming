@@ -169,7 +169,7 @@ const TOUR_CAPTIONS = [
   [25, 'En elk jaar ademen de planten: in de zomer nemen ze CO₂ op, in de winter komt het weer vrij. Netto: nul.'],
 ];
 function humanCaption(y) {
-  if (sim.finished) return `${END_YEAR}: einde van dit scenario. Kies een ander scenario en klik op "Mens grijpt in".`;
+  if (sim.finished) return `${END_YEAR}: einde van dit scenario. Kies een ander scenario en druk op ↻ om opnieuw te beginnen.`;
   if (y > NOW_YEAR) {
     if (sim.scenario === 'doorgaan') return 'Als we zo doorgaan…';
     if (sim.scenario === 'afbouw' && y < 2050) return 'Afbouwen: de uitstoot daalt naar nul in 2050. Windmolens nemen het over.';
@@ -185,7 +185,7 @@ function humanCaption(y) {
 function updateCaption() {
   let text = '';
   if (sim.mode === 'mens') text = humanCaption(sim.year);
-  else if (film.active) for (const [t, c] of TOUR_CAPTIONS) if (film.t >= t) text = c;
+  else if (story.state !== 'idle') for (const [t, c] of TOUR_CAPTIONS) if (story.t >= t) text = c;
   if (ui.caption.textContent !== text) ui.caption.textContent = text;
   ui.caption.style.opacity = text ? 1 : 0;
 }
@@ -208,30 +208,72 @@ function resetWorld() {
   for (let i = 0; i < 90; i++) simulate(1 / 30);
 }
 
-// ---------- film
-const film = { active: false, t: 0 };
+// ---------- story: idle -> playing <-> paused -> ended
+// idle: before/without the story, time runs, camera free
+// playing: time runs, camera follows the story path
+// paused: time frozen, camera free (any touch/drag/zoom pauses)
+// ended: END_YEAR reached, time frozen, camera free
+const story = { state: 'idle', t: 0, blend: 0 };
 const camPos = new THREE.Vector3(), camTgt = new THREE.Vector3();
-function startFilm() {
+const blendPos = new THREE.Vector3(), blendTgt = new THREE.Vector3();
+const PLAY_LABELS = {
+  idle: ['▶ Start verhaal', '▶', 'Start verhaal'],
+  playing: ['⏸ Pauze', '⏸', 'Pauze'],
+  paused: ['▶ Verder', '▶', 'Verder'],
+  ended: ['↻ Opnieuw', '↻', 'Opnieuw'],
+};
+function setStoryState(st) {
+  story.state = st;
+  const [desk, mob, aria] = PLAY_LABELS[st];
+  ui.btnFilm.textContent = desk;
+  ui.btnFilmM.textContent = mob;
+  ui.btnFilmM.setAttribute('aria-label', aria);
+  if (st !== 'playing') {
+    controls.target.copy(camTgt);
+    uniforms.uHighlight.value = ui.chkFossil.checked ? 1 : 0;
+  }
+}
+function play() {
+  // fly back smoothly from wherever the viewer left the camera
+  blendPos.copy(camera.position);
+  blendTgt.copy(controls.target);
+  story.blend = story.state === 'idle' ? 0 : 1;
+  setStoryState('playing');
+}
+function startStory(chapter = 'natuur') {
   resetWorld();
-  setSpeed(0.5);
-  film.active = true; film.t = 0;
-  controls.enabled = false;
+  if (chapter === 'mens') {
+    story.t = TOUR_END;
+    setMode('mens');
+    setSpeed(4);
+  } else {
+    story.t = 0;
+    setSpeed(0.5);
+  }
+  play();
+  if (chapter === 'natuur') story.blend = 0;
 }
-function stopFilm() {
-  film.active = false;
-  controls.target.copy(camTgt);
-  controls.enabled = true;
-  uniforms.uHighlight.value = ui.chkFossil.checked ? 1 : 0;
+function togglePlay() {
+  if (story.state === 'playing') setStoryState('paused');
+  else if (story.state === 'paused') play();
+  else startStory();
 }
-function updateFilm(dt) {
-  film.t += dt;
-  cameraAt(film.t, camPos, camTgt);
-  camera.position.copy(camPos.sub(camTgt).multiplyScalar(portraitK).add(camTgt));
+function updateStory(dt) {
+  story.t += dt;
+  cameraAt(story.t, camPos, camTgt);
+  camPos.sub(camTgt).multiplyScalar(portraitK).add(camTgt);
+  if (story.blend > 0) {
+    story.blend = Math.max(0, story.blend - dt / 1.5);
+    const b = story.blend * story.blend * (3 - 2 * story.blend);
+    camPos.lerp(blendPos, b);
+    camTgt.lerp(blendTgt, b);
+  }
+  camera.position.copy(camPos);
   camera.lookAt(camTgt);
-  const hl = film.t > 13 && film.t < 19 ? 1 : 0;
+  const hl = story.t > 13 && story.t < 19 ? 1 : 0;
   uniforms.uHighlight.value += (hl - uniforms.uHighlight.value) * Math.min(1, dt * 2);
-  if (film.t >= TOUR_END && sim.mode !== 'mens') { setMode('mens'); setSpeed(4); }
-  if (!RECORD && sim.mode === 'mens' && sim.year >= NOW_YEAR) stopFilm();
+  if (story.t >= TOUR_END && sim.mode !== 'mens') { setMode('mens'); setSpeed(4); }
+  if (sim.finished) setStoryState('ended');
 }
 
 // ---------- simulation step
@@ -266,8 +308,9 @@ function simulate(dt) {
 }
 
 function step(dt) {
-  if (film.active) updateFilm(dt);
-  simulate(dt);
+  const running = story.state === 'idle' || story.state === 'playing';
+  if (story.state === 'playing') updateStory(dt);
+  simulate(running ? dt : 0);
   updateHUD();
   updateCaption();
 }
@@ -292,7 +335,7 @@ function updateLabelOcclusion(force = false) {
 }
 
 function render() {
-  if (!film.active) controls.update();
+  if (story.state !== 'playing') controls.update();
   updateLabelOcclusion(RECORD);
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
@@ -314,10 +357,10 @@ addEventListener('resize', resize);
 resize();
 
 // ---------- wiring
-ui.btnNat.onclick = () => { if (film.active) stopFilm(); setMode('natuur'); };
-ui.btnHuman.onclick = () => { if (film.active) stopFilm(); setMode('mens'); };
-ui.btnFilm.onclick = () => startFilm();
-ui.btnReset.onclick = () => { if (film.active) stopFilm(); resetWorld(); };
+ui.btnNat.onclick = () => startStory('natuur');
+ui.btnHuman.onclick = () => startStory('mens');
+ui.btnFilm.onclick = () => togglePlay();
+ui.btnReset.onclick = () => { setStoryState('idle'); resetWorld(); };
 // log slider 0..100 -> 0.1..20 years per second
 const sliderToSpeed = (v) => 0.1 * Math.pow(200, v / 100);
 const speedToSlider = (sp) => (100 * Math.log(sp / 0.1)) / Math.log(200);
@@ -342,10 +385,11 @@ function setScenario(k) {
 }
 ui.scenario.onchange = () => setScenario(ui.scenario.value);
 ui.scenarioM.onchange = () => setScenario(ui.scenarioM.value);
-ui.btnFilmM.onclick = () => { document.body.classList.remove('show-panel'); startFilm(); };
+ui.btnFilmM.onclick = () => { document.body.classList.remove('show-panel'); togglePlay(); };
 ui.btnMore.onclick = () => document.body.classList.toggle('show-panel');
 ui.chkFossil.onchange = () => { uniforms.uHighlight.value = ui.chkFossil.checked ? 1 : 0; };
-renderer.domElement.addEventListener('pointerdown', () => { if (film.active) stopFilm(); });
+// touching, dragging or zooming the scene pauses the story
+controls.addEventListener('start', () => { if (story.state === 'playing') setStoryState('paused'); });
 
 setSpeed(4);
 // ---------- intro (3 steps, then the film starts)
@@ -368,7 +412,7 @@ function showIntro() {
 }
 function closeIntro(play) {
   document.body.classList.remove('intro');
-  if (play) startFilm();
+  if (play) startStory();
 }
 $('introNext').onclick = () => {
   if (introStep < INTRO.length - 1) { introStep++; renderIntro(); } else closeIntro(true);
@@ -382,8 +426,10 @@ addEventListener('keydown', (e) => {
 
 resetWorld();
 
+setStoryState('idle');
+
 if (RECORD) {
-  startFilm();
+  startStory();
   window.__frame = () => { step(1 / FPS); render(); return true; };
   window.__skip = (n) => { for (let i = 0; i < n; i++) step(1 / FPS); return true; };
   render();

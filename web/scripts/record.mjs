@@ -1,7 +1,8 @@
 // Render the film camera path frame-by-frame and encode to mp4.
 // Usage: npm run record -- --seconds 70 --fps 30 --w 1920 --h 1080 --from 0 --out ../video/blok.mp4
 import { chromium } from 'playwright';
-import { createServer } from 'vite';
+import { build, preview } from 'vite';
+import os from 'node:os';
 import ffmpegPath from 'ffmpeg-static';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
@@ -23,8 +24,10 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = path.resolve(root, arg('out', '../video/blok-proef.mp4'));
 
 fs.mkdirSync(path.dirname(out), { recursive: true });
-const server = await createServer({ root, logLevel: 'error', server: { port: 5199, hmr: false, watch: null } });
-await server.listen();
+// Record from a private production build: immune to edits, HMR and other dev servers.
+const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'koolstofblok-rec-'));
+await build({ root, logLevel: 'error', build: { outDir, emptyOutDir: true } });
+const server = await preview({ root, logLevel: 'error', build: { outDir }, preview: { port: 5199 } });
 const url = `${server.resolvedUrls.local[0]}?record=1&w=${w}&h=${h}&fps=${fps}`;
 
 const browser = await chromium.launch({
@@ -61,4 +64,5 @@ ff.stdin.end();
 await once(ff, 'close');
 await browser.close();
 await server.close();
+fs.rmSync(outDir, { recursive: true, force: true });
 console.log(`klaar: ${out}`);
