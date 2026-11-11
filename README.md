@@ -41,7 +41,7 @@ npm run dev
 Video renderen (frame voor frame, deterministisch, met ffmpeg):
 
 ```bash
-npm run record -- --seconds 82 --w 1920 --h 1080 --out ../video/koolstofblok.mp4
+npm run record -- --seconds 80 --w 1920 --h 1080 --out ../video/koolstofblok.mp4
 ```
 
 Meer over de opbouw van de code: [`web/README.md`](web/README.md).

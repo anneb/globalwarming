@@ -3,13 +3,13 @@ import * as THREE from 'three';
 // Film camera: keyframes [time s, position, target]. After the last key the
 // camera keeps orbiting slowly around the block.
 const KEYS = [
-  [0, [-4, 22, 20], [-2, 1, 0]],          // over the forests: seasonal breathing
-  [6, [-9, 26, 14], [-7, 1, 5]],          // high above the volcano
-  [12, [-8, 7, 21], [-7, 0, 8]],          // descend toward the cut face
-  [17, [-6, -3.5, 22], [-6.5, -3.5, 8]],  // magma chamber in section
-  [22, [0, -1.5, 21], [-0.5, -1.5, 8]],   // coal, oil & gas layers
-  [27, [12, 2, 20], [9, 0, 6]],           // uplifted, eroded mountains
-  [32, [26, 16, 34], [0, 0, 0]],          // overview with atmosphere
+  [0, [-9, 26, 14], [-7, 1, 5]],          // high above the volcano
+  [6, [-8, 7, 21], [-7, 0, 8]],           // descend toward the cut face
+  [11, [-6, -3.5, 22], [-6.5, -3.5, 8]],  // magma chamber in section
+  [16, [0, -1.5, 21], [-0.5, -1.5, 8]],   // coal, oil & gas layers
+  [21, [12, 2, 20], [9, 0, 6]],           // uplifted, eroded mountains
+  [27, [-4, 22, 20], [-2, 1, 0]],         // over the forests: seasonal breathing
+  [33, [26, 16, 34], [0, 0, 0]],          // overview with atmosphere
 ];
 export const TOUR_END = KEYS[KEYS.length - 1][0];
 

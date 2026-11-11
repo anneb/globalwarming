@@ -162,11 +162,11 @@ function updateHUD() {
 
 const MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
 const TOUR_CAPTIONS = [
-  [0, 'Elk jaar ademen de planten: in de zomer nemen ze CO₂ op, in de winter komt het weer vrij. Netto: nul.'],
-  [6, 'Maar een heel klein deel wordt begraven. Miljoenen jaren lang vormen bossen, venen en algen zo koolstof in de bodem.'],
-  [12, 'Een klein beetje komt terug via vulkanen: CO₂ uit magma en verhit kalksteen.'],
-  [18, 'Kolen, olie en gas: geconcentreerde koolstof, kilometers diep opgeslagen.'],
-  [25, 'Gebergtevorming tilt oude lagen omhoog. Erosie legt ze bloot en ze oxideren — heel langzaam.'],
+  [0, 'Miljoenen jaren lang begroeven bossen, venen en algen een klein deel van hun koolstof in de bodem.'],
+  [6, 'Een klein beetje komt terug via vulkanen: CO₂ uit magma en verhit kalksteen.'],
+  [13, 'Kolen, olie en gas: geconcentreerde koolstof, kilometers diep opgeslagen.'],
+  [19, 'Gebergtevorming tilt oude lagen omhoog. Erosie legt ze bloot en ze oxideren — heel langzaam.'],
+  [25, 'En elk jaar ademen de planten: in de zomer nemen ze CO₂ op, in de winter komt het weer vrij. Netto: nul.'],
 ];
 function humanCaption(y) {
   if (sim.finished) return `${END_YEAR}: einde van dit scenario. Kies een ander scenario en klik op "Mens grijpt in".`;
@@ -228,7 +228,7 @@ function updateFilm(dt) {
   cameraAt(film.t, camPos, camTgt);
   camera.position.copy(camPos.sub(camTgt).multiplyScalar(portraitK).add(camTgt));
   camera.lookAt(camTgt);
-  const hl = film.t > 18 && film.t < 25 ? 1 : 0;
+  const hl = film.t > 13 && film.t < 19 ? 1 : 0;
   uniforms.uHighlight.value += (hl - uniforms.uHighlight.value) * Math.min(1, dt * 2);
   if (film.t >= TOUR_END && sim.mode !== 'mens') { setMode('mens'); setSpeed(4); }
   if (!RECORD && sim.mode === 'mens' && sim.year >= NOW_YEAR) stopFilm();
