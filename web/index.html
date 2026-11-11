@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Koolstof: van gesteente naar lucht</title>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <div id="hud">
+      <div class="row"><span class="lbl">Jaar</span><span id="year">—</span></div>
+      <div class="row"><span class="lbl">CO₂ in atmosfeer</span><span id="ppm" class="big">280 ppm</span></div>
+      <div class="bar">
+        <div class="bar-label">Natuur: vulkanen + oxidatie gesteente</div>
+        <div class="track"><div id="barNat" class="fill nat"></div></div>
+        <div id="natVal" class="val"></div>
+      </div>
+      <div class="bar">
+        <div class="bar-label">Mens: fossiele brandstof</div>
+        <div class="track"><div id="barHum" class="fill hum"></div></div>
+        <div id="humVal" class="val"></div>
+      </div>
+    </div>
+
+    <div id="caption"></div>
+
+    <details id="panel" open>
+      <summary>Koolstof: van gesteente naar lucht</summary>
+      <p class="sub">Doorsnede 30 × 16 km, 10 km diep. Schematisch: laagdiktes, vulkaan en installaties zijn overdreven.</p>
+      <div class="btns">
+        <button id="btnNat" class="active">Natuurlijke kringloop</button>
+        <button id="btnHuman">Mens grijpt in (1850 →)</button>
+      </div>
+      <label class="slider">Na 2025:
+        <select id="scenario"></select>
+      </label>
+      <label class="slider">Snelheid: <span id="speedVal">4</span> jaar per seconde
+        <input type="range" id="speed" min="0" max="100" step="0.5" value="70" />
+        <small class="hint">Onder ~1 jaar/s zie je de seizoenen</small>
+      </label>
+      <label class="chk"><input type="checkbox" id="chkLabels" checked /> Labels</label>
+      <label class="chk"><input type="checkbox" id="chkFossil" /> Markeer fossiele koolstof</label>
+      <div class="btns">
+        <button id="btnFilm">▶ Speel film</button>
+        <button id="btnReset">Reset</button>
+      </div>
+      <ul class="legend">
+        <li><i style="background:#9cc2ff"></i>CO₂ al in de lucht (vóór 1850)</li>
+        <li><i style="background:#fffff0"></i>Natuurlijke uitstoot</li>
+        <li><i style="background:#ffb840"></i>Fossiele koolstof op weg naar boven</li>
+        <li><i style="background:#ff551a"></i>CO₂ uit verbranding</li>
+        <li><i style="background:#73f259"></i>CO₂ in planten (seizoen: zomer op, winter terug)</li>
+        <li><i style="background:#5ad966"></i><i style="background:#4cc7fa"></i>Opname door land / oceaan</li>
+      </ul>
+      <details class="info">
+        <summary>Hoe komt koolstof van nature terug?</summary>
+        <p><b>1. Vulkanen</b> (~0,09 GtC/jr): kalksteen wordt bij subductie de diepte in getrokken; magma geeft CO₂ af.</p>
+        <p><b>2. Oxidatie van gesteente</b> (~0,07 GtC/jr): gebergtevorming tilt oude kolen- en schalielagen op, erosie legt ze bloot en ze oxideren langzaam.</p>
+        <p>Samen ~0,16 GtC per jaar. De mens: ~10 GtC per jaar — 60–100× zoveel.</p>
+        <p><b>Seizoenen</b>: planten nemen in de zomer ~13 GtC op en geven dat in de winter terug (±3 ppm, de "zaagtand" van de Keeling-curve). Netto nul.</p>
+        <p>Elke stip ≈ 50 miljoen ton koolstof.</p>
+      </details>
+    </details>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
