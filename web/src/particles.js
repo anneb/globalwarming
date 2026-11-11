@@ -259,8 +259,10 @@ export class CarbonParticles {
     const r = this.rng, P = this.pos, V = this.vel, T = this.tgt;
     const speed = dt > 0 ? yrs / dt : 0; // years per second
     const tempo = Math.min(2, Math.max(0.6, Math.sqrt(speed / 4)));
-    // mixing: fraction of remaining distance closed this step (capped for readability)
-    const mixRate = Math.min(1.2, speed / MIX_YEARS);
+    // mixing: fraction of remaining distance closed this step. Capped for
+    // readability, with a floor so a plume never lingers when time is slow or
+    // frozen (e.g. after the scenario ends): real mixing takes only ~1-2 years.
+    const mixRate = Math.min(1.2, Math.max(0.5, speed / MIX_YEARS));
     const mixK = 1 - Math.exp(-mixRate * dt);
 
     for (let i = 0; i < MAX; i++) {
