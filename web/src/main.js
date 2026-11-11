@@ -272,8 +272,28 @@ function step(dt) {
   updateCaption();
 }
 
+// CSS labels are drawn on top of the canvas; hide the ones the block hides
+// (e.g. km ticks or the sea seen through the block from the other side).
+const raycaster = new THREE.Raycaster();
+const toLabel = new THREE.Vector3();
+let labelFrame = 0;
+function updateLabelOcclusion(force = false) {
+  if (!force && labelFrame++ % 6 !== 0) return;
+  for (const group of [natLabels, humanLabels]) {
+    if (!group.visible) continue;
+    for (const o of group.children) {
+      toLabel.subVectors(o.position, camera.position);
+      const dist = toLabel.length();
+      raycaster.set(camera.position, toLabel.normalize());
+      raycaster.far = Math.max(0, dist - 0.2);
+      o.visible = raycaster.intersectObject(block.group, true).length === 0;
+    }
+  }
+}
+
 function render() {
   if (!film.active) controls.update();
+  updateLabelOcclusion(RECORD);
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
 }
