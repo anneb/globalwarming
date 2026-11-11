@@ -23,7 +23,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = path.resolve(root, arg('out', '../video/blok-proef.mp4'));
 
 fs.mkdirSync(path.dirname(out), { recursive: true });
-const server = await createServer({ root, logLevel: 'error', server: { port: 5199 } });
+const server = await createServer({ root, logLevel: 'error', server: { port: 5199, hmr: false, watch: null } });
 await server.listen();
 const url = `${server.resolvedUrls.local[0]}?record=1&w=${w}&h=${h}&fps=${fps}`;
 
@@ -36,6 +36,8 @@ page.on('pageerror', (e) => console.error('[page error]', e.message));
 await page.goto(url);
 await page.waitForFunction(() => window.__ready === true, null, { timeout: 120000 });
 
+page.on("framenavigated", (f) => { if (f === page.mainFrame() && started) { console.error("pagina herladen tijdens opname — afgebroken"); process.exit(1); } });
+let started = false;
 if (from > 0) await page.evaluate((n) => window.__skip(n), Math.round(from * fps));
 
 const ff = spawn(ffmpegPath, [
@@ -43,6 +45,7 @@ const ff = spawn(ffmpegPath, [
   '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '18', '-preset', 'medium', out,
 ], { stdio: ['pipe', 'inherit', 'inherit'] });
 
+started = true;
 const total = Math.round(seconds * fps);
 const t0 = Date.now();
 for (let i = 0; i < total; i++) {

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const [outDir, ...times] = process.argv.slice(2);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 fs.mkdirSync(outDir, { recursive: true });
-const server = await createServer({ root, logLevel: 'error', server: { port: 5198 } });
+const server = await createServer({ root, logLevel: 'error', server: { port: 5198, hmr: false, watch: null } });
 await server.listen();
 const fps = 10, w = Number(process.env.SNAP_W) || 1280, h = Number(process.env.SNAP_H) || 720;
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
