@@ -8,6 +8,20 @@
   <body>
     <div id="app"></div>
 
+    <div id="intro" role="dialog" aria-modal="true" aria-labelledby="introTitle">
+      <div class="intro-card">
+        <h1 id="introTitle">Het effect van fossiele CO₂</h1>
+        <p id="introText"></p>
+        <div class="intro-foot">
+          <span id="introStep" class="intro-step"></span>
+          <div class="intro-btns">
+            <button id="introSkip" class="intro-skip">Overslaan</button>
+            <button id="introNext" class="intro-next">Volgende →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="hud">
       <div class="row"><span class="lbl">Jaar</span><span id="year">—</span></div>
       <div class="row"><span class="lbl">CO₂ in atmosfeer</span><span id="ppm" class="big">280 ppm</span></div>

@@ -176,7 +176,7 @@ function humanCaption(y) {
     if (y < NOW_YEAR + 40) return 'Uitstoot nul. Toch daalt de CO₂ maar langzaam: oceaan en land nemen het in decennia tot eeuwen op.';
     return 'Ongeveer een vijfde van de extra CO₂ blijft duizenden jaren in de lucht.';
   }
-  if (y < 1900) return 'Vanaf 1850 halen mensen die koolstof gericht naar boven — en verbranden hem.';
+  if (y < 1900) return 'Vanaf 1850 halen mensen die koolstof gericht naar boven — en verbranden het.';
   if (y < 1960) return `Elke stip ≈ ${UNIT * 1000} miljoen ton koolstof. Oranje = CO₂ uit fossiele brandstof.`;
   if (y < 2000) return 'Ongeveer de helft wordt opgenomen door oceaan en planten. De rest blijft in de lucht.';
   if (y <= NOW_YEAR) return 'Nu: ~10 miljard ton koolstof per jaar — 60–100× zoveel als vulkanen en verwering samen.';
@@ -348,6 +348,38 @@ ui.chkFossil.onchange = () => { uniforms.uHighlight.value = ui.chkFossil.checked
 renderer.domElement.addEventListener('pointerdown', () => { if (film.active) stopFilm(); });
 
 setSpeed(4);
+// ---------- intro (3 steps, then the film starts)
+const INTRO = [
+  'Deze animatie toont eerst de natuurlijke koolstofkringloop van de aarde.',
+  'En ook de jaarlijkse kringloop tussen planten en atmosfeer.',
+  'Dan de invloed van de mens.',
+];
+let introStep = 0;
+function renderIntro() {
+  $('introText').textContent = INTRO[introStep];
+  $('introStep').textContent = `${introStep + 1}/${INTRO.length}`;
+  $('introNext').textContent = introStep < INTRO.length - 1 ? 'Volgende →' : 'Start ▶';
+}
+function showIntro() {
+  introStep = 0;
+  renderIntro();
+  document.body.classList.add('intro');
+  $('introNext').focus();
+}
+function closeIntro(play) {
+  document.body.classList.remove('intro');
+  if (play) startFilm();
+}
+$('introNext').onclick = () => {
+  if (introStep < INTRO.length - 1) { introStep++; renderIntro(); } else closeIntro(true);
+};
+$('introSkip').onclick = () => closeIntro(false);
+addEventListener('keydown', (e) => {
+  if (!document.body.classList.contains('intro')) return;
+  if (e.key === 'Escape') closeIntro(false);
+  else if (e.key === 'ArrowRight') $('introNext').click();
+});
+
 resetWorld();
 
 if (RECORD) {
@@ -357,12 +389,12 @@ if (RECORD) {
   render();
   window.__ready = true;
 } else {
-  // phones: tell the story straight away, without label clutter
+  // phones: no label clutter
   if (matchMedia('(max-width: 700px), (max-height: 500px)').matches) {
     ui.chkLabels.checked = false;
     ui.chkLabels.onchange();
-    startFilm();
   }
+  showIntro();
   const clock = new THREE.Clock();
   renderer.setAnimationLoop(() => {
     step(Math.min(clock.getDelta(), 1 / 20));
